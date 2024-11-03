@@ -11,7 +11,7 @@ def decrypt(C):
       M += list(dictionary.keys())[list(dictionary.values()).index(byte)]
     else:
       M += "?"
-  print(M)
+  return M
 
 def split_cryptogram(C):
 
