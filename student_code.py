@@ -2,6 +2,7 @@ import requests
 from collections import Counter
 
 # Caractères et bi-caractères fixes (de l'énoncé)
+
 bicharacters = ['e ', 's ', 't ', 'es', ' d', '\r\n', 'en', 'qu', ' l', 're', ' p', 'de', 'le', 'nt', 'on', ' c', ', ', ' e',
                 'ou', ' q', ' s', 'n ', 'ue', 'an', 'te', ' a', 'ai', 'se', 'it', 'me', 'is', 'oi', 'r ', 'er', ' m', 'ce',
                 'ne', 'et', 'in', 'ns', ' n', 'ur', 'i ', 'a ', 'eu', 'co', 'tr', 'la', 'ar', 'ie', 'ui', 'us', 'ut', 'il',
@@ -33,12 +34,17 @@ character_count = Counter()
 
 url = "https://www.gutenberg.org/ebooks/13846.txt.utf-8"
 corpus1 = load_text_from_web(url)
-# Enlever la partie en anglais
-corpus1 = corpus1[1905:]
+# Tronquer la partie en anglais
+corpus1 = corpus1[822:len(corpus1)-18324]
 url = "https://www.gutenberg.org/ebooks/4650.txt.utf-8"
 corpus2 = load_text_from_web(url)
-# Enlever la partie en anglais
-corpus2 = corpus2[3749:]
+# Tronquer la partie en anglais
+corpus2 = corpus2[822:len(corpus2)-18324]
+url = "https://www.gutenberg.org/cache/epub/63267/pg63267.txt"
+corpus3 = load_text_from_web(url)
+# Tronquer la partie en anglais
+corpus3 = corpus3[822:len(corpus3)-18324]
+
 corpus = corpus1 + corpus2
 
 symboles = characters + bicharacters
@@ -62,19 +68,23 @@ symbol_frequency = {symbol: (count / corpus_length) * 100 for symbol, count in s
 # Cette fonction associe chaque symbole à une séquence de bits en comparant les fréquences
 def map_symbols_to_bytes(symbol_freqs, byte_freqs):
 
-  #sorted_symbols = sorted(symbol_freqs.items(), key=lambda x: x[1], reverse=True)
-  #sorted_bytes = sorted(byte_freqs.items(), key=lambda x: x[1], reverse=True)
+  sorted_symbols = sorted(symbol_freqs.items(), key=lambda x: x[1], reverse=True)
+  sorted_bytes = sorted(byte_freqs.items(), key=lambda x: x[1], reverse=True)
+  # S'il y a moins de 256 différents bytes, peu probables qu'ils représentent des symboles rares
+  # en fin de liste
+  sorted_symbols = dict(sorted_symbols[:len(sorted_bytes)-1])
+  print(sorted_bytes)
 
   mapping = {}
   # Pour éviter qu'un même octet soit associé à plus d'un symbole, on tient compte des octets utilisés.
   used_bytes = set()
 
-  for symbol, sym_freq in symbol_freqs:
+  for symbol, sym_freq in sorted_symbols.items():
 
     closest_byte = None
     min_diff = float('inf')
 
-    for byte, byte_freq in byte_freqs:
+    for byte, byte_freq in byte_freqs.items():
       if byte in used_bytes:
         continue  # Ne pas prendre cet octet s'il est déjà utilisé pour un autre symbole
 
@@ -83,10 +93,10 @@ def map_symbols_to_bytes(symbol_freqs, byte_freqs):
         closest_byte = byte
         min_diff = diff
       elif diff == min_diff:
-        # Prendre le premier octet rencontré si plusieurs octets ont la même fréquence
+         #Prendre le premier octet rencontré si plusieurs octets ont la même fréquence
         closest_byte = closest_byte or byte
 
-    # "Mapper" le symbole et l'octet et ajouter l'octet à la liste d'octets utilisés
+     #"Mapper" le symbole et l'octet et ajouter l'octet à la liste d'octets utilisés
     if closest_byte is not None:
       mapping[symbol] = closest_byte
       used_bytes.add(closest_byte)
@@ -101,17 +111,19 @@ def decrypt(C):
 
   crypto_frequency = {byte: (count / len(C_split)) * 100 for byte, count in crypto_count.items()}
 
-  print(crypto_frequency)
-
   dictionary = map_symbols_to_bytes(symbol_frequency, crypto_frequency)
 
   M=""
 
   for byte in C_split:
     if byte in dictionary.values():
-      M += list(dictionary.keys())[list(dictioQnary.values()).index(byte)]
+      M += list(dictionary.keys())[list(dictionary.values()).index(byte)]
     else:
       M += "?"
+
+  return M
+
+
 
 def split_cryptogram(C):
 
