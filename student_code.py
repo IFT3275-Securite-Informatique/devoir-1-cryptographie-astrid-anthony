@@ -1,8 +1,8 @@
 import requests
+from crypt import load_text_from_web
 from collections import Counter
 
 # Caractères et bi-caractères fixes (de l'énoncé)
-
 bicharacters = ['e ', 's ', 't ', 'es', ' d', '\r\n', 'en', 'qu', ' l', 're', ' p', 'de', 'le', 'nt', 'on', ' c', ', ', ' e',
                 'ou', ' q', ' s', 'n ', 'ue', 'an', 'te', ' a', 'ai', 'se', 'it', 'me', 'is', 'oi', 'r ', 'er', ' m', 'ce',
                 'ne', 'et', 'in', 'ns', ' n', 'ur', 'i ', 'a ', 'eu', 'co', 'tr', 'la', 'ar', 'ie', 'ui', 'us', 'ut', 'il',
@@ -19,15 +19,11 @@ characters = ['b', 'j', '\r', 'J', '”', ')', 'Â', 'É', 'ê', '5', 't', '9', 
               '*', 'Q', 'w', '1', 'û', '7', 'G', 'm', '™', 'K', 'z', '\n', 'o', 'ù', ',', 'r', ']', '.', 'M', 'Ç', '“', 'h',
               '-', 'f', 'ë', '6', ';', 'd', 'ô']
 
-# Code pris de l'énoncé pour sauvegarder un texte
-def load_text_from_web(url):
-  try:
-    response = requests.get(url)
-    response.raise_for_status()  # Raise an exception for bad status codes
-    return response.text
-  except requests.exceptions.RequestException as e:
-    print(f"An error occurred while loading the text: {e}")
-    return None
+def split_cryptogram(C):
+
+    # Diviser le nombre binaire en octets
+    C_split = [C[i:i+8] for i in range(0, len(C), 8)]
+    return C_split
 
 bi_character_count = Counter()
 character_count = Counter()
@@ -45,7 +41,7 @@ corpus3 = load_text_from_web(url)
 # Tronquer la partie en anglais
 corpus3 = corpus3[822:len(corpus3)-18324]
 
-corpus = corpus1 + corpus2
+corpus = corpus1 + corpus2 + corpus3
 
 symboles = characters + bicharacters
 corpus_length = len(corpus)
@@ -122,12 +118,4 @@ def decrypt(C):
       M += "?"
 
   return M
-
-
-
-def split_cryptogram(C):
-
-  # Diviser le nombre binaire en octets
-  C_split = [C[i:i+8] for i in range(0, len(C), 8)]
-  return C_split
 
